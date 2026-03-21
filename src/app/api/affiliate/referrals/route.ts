@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
       where: { affiliateId: user.affiliate.id },
       orderBy: { createdAt: 'desc' }
     });
-
+    
     // Map referrals to include estimatedValue from metadata
     const mappedReferrals = referrals.map((ref: any) => {
       const metadata = ref.metadata as any;

@@ -25,9 +25,9 @@
     "url": "https://github.com/refferq/refferq/issues"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "node api.js && next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node api.js && next start",
     "lint": "next lint",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
