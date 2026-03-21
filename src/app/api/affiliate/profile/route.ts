@@ -63,10 +63,20 @@ export async function GET(request: NextRequest) {
     const totalCommissions = commissions.length;
     const pendingCommissionsCount = pendingCommissionsList.length;
     const totalConversions = conversions.length;
-    const totalClicks = referrals.reduce((sum, r) => {
+    // Get actual clicks count from ReferralClick model
+    const referralClicksCount = await prisma.referralClick.count({
+      where: {
+        referral: {
+          affiliateId: affiliate.id,
+        }
+      }
+    });
+
+    const totalClicks = referralClicksCount + referrals.reduce((sum, r) => {
       const metadata = r.metadata as any;
       return sum + (metadata?.clicks || 0);
     }, 0);
+    
     const conversionRate = totalClicks > 0 ? (totalConversions / totalClicks) * 100 : 0;
 
     // Next maturation date for pending commissions
@@ -86,7 +96,7 @@ export async function GET(request: NextRequest) {
       conversionRate
     };
 
-    // Map referrals to include estimatedValue from metadata
+    // Map actual referrals to include estimatedValue from metadata
     const mappedReferrals = referrals.map(ref => {
       const metadata = ref.metadata as any;
       return {

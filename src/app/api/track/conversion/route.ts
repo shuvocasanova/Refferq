@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
     const affiliate = await prisma.affiliate.findUnique({
       where: { referralCode },
       include: {
+        partnerGroup: true,
         user: {
           select: {
             id: true,
@@ -98,10 +99,13 @@ export async function POST(req: NextRequest) {
           leadName: customerName || 'Unknown Customer',
           affiliateId: affiliate.id,
           status: 'APPROVED',
-          metadata: metadata || {},
+          metadata: {
+            ...(metadata || {}),
+            estimated_value: amount || 0,
+          },
         },
       });
-    } else if (referral && referral.status === 'PENDING') {
+    } else if (referral) {
       // Update referral status to APPROVED
       referral = await prisma.referral.update({
         where: { id: referral.id },
@@ -109,7 +113,8 @@ export async function POST(req: NextRequest) {
           status: 'APPROVED',
           metadata: {
             ...(referral.metadata as object),
-            ...metadata,
+            ...(metadata || {}),
+            estimated_value: amount || 0,
           },
         },
       });
@@ -135,10 +140,26 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Note: Commission calculation will be done by the commission rules system
-    // This just creates the conversion record
+    // Get commission rate from partner group or use default 10%
+    const commissionRate = affiliate.partnerGroup?.commissionRate
+      ? affiliate.partnerGroup.commissionRate / 100
+      : 0.1;
 
-    console.log('✅ Conversion tracked successfully:', {
+    const commissionAmount = Math.round(amountCents * commissionRate);
+
+    // Create the commission record
+    await prisma.commission.create({
+      data: {
+        affiliateId: affiliate.id,
+        conversionId: conversion.id,
+        userId: affiliate.userId,
+        rate: commissionRate,
+        amountCents: commissionAmount,
+        status: 'PENDING',
+      },
+    });
+
+    console.log('✅ Conversion & Commission tracked successfully:', {
       conversionId: conversion.id,
       affiliateId: affiliate.id,
       referralId: referral?.id,
