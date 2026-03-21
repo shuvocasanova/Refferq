@@ -15,9 +15,7 @@ node_modules
 /dist
 
 # Environment Variables
-.env
 .env*.local
-.env.production
 
 # Debug
 npm-debug.log*
@@ -36,7 +34,6 @@ next-env.d.ts
 /prisma/migrations/*.sql
 
 # IDE
-.vscode/settings.json
 .idea
 *.swp
 *.swo
@@ -55,3 +52,4 @@ logs
 
 # Scripts
 /scripts/
+config.bat
